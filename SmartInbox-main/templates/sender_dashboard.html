@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SmartInbox - Sender Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='email.png') }}">
+    <style>
+        /* --- Original Color Scheme & Variables (Unchanged) --- */
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --light-bg: #f9fafb;
+            --card-bg: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow-clean: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            --shadow-hover: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
+            --radius-lg: 1rem;
+        }
+
+        /* --- ENHANCED STYLES --- */
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: var(--text-primary);
+        }
+
+        .navbar {
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        /* Card enhancements */
+        .card {
+            box-shadow: var(--shadow-clean);
+            border: none; /* Removed border for a cleaner look */
+            border-radius: var(--radius-lg);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid var(--border-color);
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            padding: 1.25rem;
+        }
+
+        /* Tab enhancements */
+        .nav-tabs { border-bottom: 1px solid var(--border-color); }
+        .nav-tabs .nav-link { 
+            border: none; 
+            border-bottom: 3px solid transparent; 
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: color 0.2s ease, border-color 0.2s ease;
+        }
+        .nav-tabs .nav-link:hover {
+            color: var(--primary-color);
+        }
+        .nav-tabs .nav-link.active {
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+            background-color: transparent;
+            font-weight: 600;
+        }
+
+        /* Form enhancements */
+        .form-control {
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+        }
+        .form-label {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        /* Button enhancements */
+        .btn {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        /* Sent Email list enhancements */
+        .email-item {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            border-left: 4px solid transparent; /* Placeholder for unread indicator */
+            transition: background-color 0.2s ease, border-left-color 0.3s ease;
+        }
+        .email-item:last-child { border-bottom: none; }
+        .email-item:hover { background-color: #f9fafb; }
+        
+        .email-item.unread .email-subject {
+            font-weight: 700; /* Bolder subject for unread emails */
+            color: var(--text-primary);
+        }
+        .email-item.unread {
+            border-left-color: var(--primary-color); /* Blue indicator for unread */
+        }
+        
+        .email-subject {
+            font-weight: 600;
+        }
+
+        /* Tone badge styles (Unchanged) */
+        .tone-badge { font-size: 0.8rem; padding: 0.35em 0.65em; border-radius: 0.25rem; font-weight: 500; text-transform: capitalize; }
+        .tone-polite { background-color: #d1e7dd; color: #0f5132; } .tone-urgent { background-color: #fff3cd; color: #664d03; } .tone-formal { background-color: #cfe2ff; color: #084298; } .tone-neutral { background-color: #e2e3e5; color: #41464b; } .tone-angry { background-color: #f8d7da; color: #842029; } .tone-friendly { background-color: #cff4fc; color: #055160; } .tone-apologetic { background-color: #fefefe; color: #856404; border: 1px solid #ffeeba; } .tone-appreciative { background-color: #e2f0d9; color: #2e7d32; } .tone-sarcastic { background-color: #f0e68c; color: #665c00; } .tone-confused { background-color: #e0e0e0; color: #5c636a; } .tone-demanding { background-color: #f8d7da; color: #721c24; } .tone-encouraging { background-color: #d1e7dd; color: #0f5132; } .tone-threatening { background-color: #f5c6cb; color: #721c24; } .tone-dismissive { background-color: #dee2e6; color: #6c757d; }
+
+        /* AI Tools Section enhancements */
+        .ai-tool-group {
+            background-color: rgba(243, 244, 246, 0.5);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+        }
+        .ai-tool-group h6 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        #rewritten-text-output {
+            min-height: 200px; overflow-y: auto; white-space: pre-wrap; font-size: 0.875rem;
+        }
+        
+        .toast-container-fixed { position: fixed; bottom: 1rem; right: 1rem; z-index: 1050; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#"><i class="bi bi-envelope-open me-2 fs-5"></i> <span class="fw-bold">SmartInbox</span></a>
+            <div class="d-flex align-items-center">
+                <span class="text-white me-3"><i class="bi bi-person-circle me-1"></i> {{ current_user }}</span>
+                <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-light"><i class="bi bi-box-arrow-right me-1"></i> Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="card">
+                    <div class="card-header p-0">
+                        <ul class="nav nav-tabs nav-fill" id="myTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="compose-tab" data-bs-toggle="tab" data-bs-target="#compose-tab-pane" type="button" role="tab" aria-controls="compose-tab-pane" aria-selected="true">
+                                    <i class="bi bi-pencil-square me-1"></i> Compose
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tools-tab" data-bs-toggle="tab" data-bs-target="#tools-tab-pane" type="button" role="tab" aria-controls="tools-tab-pane" aria-selected="false">
+                                    <i class="bi bi-magic me-1"></i> AI Tools
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="tab-content" id="myTabContent">
+                            <div class="tab-pane fade show active" id="compose-tab-pane" role="tabpanel" aria-labelledby="compose-tab" tabindex="0">
+                                <form id="compose-form">
+                                    <input type="hidden" id="sender_id" value="{{ current_id }}" />
+                                    <div class="mb-3"><label class="form-label">To</label><input type="email" id="recipient" class="form-control" placeholder="name@example.com" required/></div>
+                                    <div class="mb-3"><label class="form-label">Subject</label><input type="text" id="subject" class="form-control" placeholder="Your email subject"/></div>
+                                    <div class="mb-3"><label class="form-label">Message</label><textarea id="body" class="form-control" placeholder="Write your message here..." rows="8" required></textarea></div>
+                                    <button type="button" id="send-btn" class="btn btn-primary w-100 fw-medium py-2"><i class="bi bi-send me-2"></i> Send Email</button>
+                                </form>
+                            </div>
+                            <div class="tab-pane fade" id="tools-tab-pane" role="tabpanel" aria-labelledby="tools-tab" tabindex="0">
+                                <div class="mb-4">
+                                    <h6 class="fw-semibold small text-muted text-uppercase mb-2">Message Preview</h6>
+                                    <div id="ai-tools-text-preview" class="p-3 border rounded bg-light" style="min-height: 150px; overflow-y: auto; white-space: pre-wrap; font-size: 0.9rem;">
+                                        Your message from the "Compose" tab will appear here.
+                                    </div>
+                                </div>
+                                <div class="vstack gap-4">
+                                    <div class="ai-tool-group">
+                                        <h6 class="mb-2"><i class="bi bi-brain me-2"></i> AI Analysis</h6>
+                                        <p class="text-muted small mb-3">Analyze the tone and spam potential of your message.</p>
+                                        <button id="analyze-btn" class="btn btn-outline-primary w-100 mb-3"><i class="bi bi-search me-2"></i> Analyze Message</button>
+                                        <div id="llama-result" style="display: none;">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <strong class="small">Tone:</strong> <span id="llama-tone" class="tone-badge">—</span>
+                                            </div>
+                                            <hr class="my-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <strong class="small">Spam:</strong> <span id="llama-spam" class="badge">—</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="ai-tool-group">
+                                        <h6 class="mb-2"><i class="bi bi-magic me-2"></i> Tone Rewriter</h6>
+                                        <p class="text-muted small mb-3">Rewrite your message into a different tone.</p>
+                                        <div class="mb-3">
+                                            <label for="rewrite-tone-select" class="form-label small">Rewrite to this tone:</label>
+                                            <select class="form-select" id="rewrite-tone-select">
+                                                <option value="polite">Polite</option><option value="formal">Formal</option><option value="friendly">Friendly</option><option value="appreciative">Appreciative</option><option value="apologetic">Apologetic</option><option value="encouraging">Encouraging</option><option value="urgent">Urgent</option><option value="demanding">Demanding</option><option value="sarcastic">Sarcastic</option><option value="threatening">Threatening</option><option value="angry">Angry</option>
+                                            </select>
+                                        </div>
+                                        <button id="rewrite-btn" class="btn btn-outline-primary w-100"><i class="bi bi-arrow-repeat me-2"></i> Rewrite Message</button>
+                                        <div id="rewrite-result-container" class="mt-3" style="display: none;">
+                                            <hr>
+                                            <label for="rewritten-text-output" class="form-label">Suggested Version:</label>
+                                            <textarea id="rewritten-text-output" class="form-control" readonly></textarea>
+                                            <button id="use-rewritten-text-btn" class="btn btn-outline-primary w-100 mt-3"><i class="bi bi-check-lg me-2"></i> Use This Version</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-semibold"><i class="bi bi-envelope-paper me-2"></i> Sent Emails</h5>
+                        <a href="{{ url_for('received_emails') }}" class="btn btn-sm btn-primary"><i class="bi bi-inbox me-1"></i> Inbox</a>
+                    </div>
+                    <div class="list-group list-group-flush" id="emails-list">
+                        {% if emails %}{% for email in emails %}
+                        <div class="list-group-item email-item {% if not email.opened_at %}unread{% endif %}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1 text-truncate pe-4 email-subject">{{ email.subject or '(No subject)' }}</h6>
+                                <small class="text-nowrap text-muted">{{ email.sent_at }}</small>
+                            </div>
+                            <p class="mb-1 text-muted small">To: {{ email.recipient_email }}</p>
+                            <div class="d-flex align-items-center justify-content-between mt-2">
+                                <div>
+                                    <span class="tone-badge tone-{{ email.tone | lower if email.tone else 'neutral' }}">{{ email.tone or 'Neutral' }}</span>
+                                    {% if email.is_spam %}<span class="badge bg-danger rounded-pill ms-2"><i class="bi bi-exclamation-triangle-fill me-1"></i> SPAM</span>{% endif %}
+                                </div>
+                                <span class="small fw-medium">
+                                    {% if email.opened_at %}
+                                        <i class="bi bi-check-circle-fill text-success me-1"></i> Read
+                                    {% else %}
+                                        <i class="bi bi-circle-fill text-primary me-1" style="font-size: 0.6rem;"></i> Unread
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}{% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-envelope-open text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="mt-3 text-muted">No sent emails yet</h5>
+                            <p class="text-muted small">When you send an email, it will appear here.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container-fixed" id="toast-container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const API_BASE = window.location.origin;
+
+        function setLoading(button, isLoading) {
+            const originalHtml = button.innerHTML;
+            if (isLoading) {
+                button.disabled = true;
+                button.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Loading...`;
+            } else {
+                button.disabled = false;
+                if (button.id === 'send-btn') button.innerHTML = '<i class="bi bi-send me-2"></i> Send Email';
+                if (button.id === 'analyze-btn') button.innerHTML = '<i class="bi bi-search me-2"></i> Analyze Message';
+                if (button.id === 'rewrite-btn') button.innerHTML = '<i class="bi bi-arrow-repeat me-2"></i> Rewrite Message';
+            }
+        }
+
+        function showToast(message, type = "info") {
+            const toastContainer = document.getElementById("toast-container");
+            const toastId = `toast-${Date.now()}`;
+            let bgClass = "bg-primary";
+            if (type === "error") bgClass = "bg-danger";
+            else if (type === "success") bgClass = "bg-success";
+            const toastHtml = `<div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true"><div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>`;
+            toastContainer.insertAdjacentHTML("beforeend", toastHtml);
+            const toast = new bootstrap.Toast(document.getElementById(toastId));
+            toast.show();
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const mainBodyEl = document.getElementById('body');
+            const previewEl = document.getElementById('ai-tools-text-preview');
+            const placeholderText = 'Your message from the "Compose" tab will appear here.';
+
+            const updatePreview = () => {
+                const currentText = mainBodyEl.value.trim();
+                if (currentText) {
+                    previewEl.textContent = currentText;
+                } else {
+                    previewEl.textContent = placeholderText;
+                }
+            };
+
+            mainBodyEl.addEventListener('input', updatePreview);
+            updatePreview();
+
+            document.getElementById("send-btn").addEventListener("click", async () => {
+                const btn = document.getElementById("send-btn");
+                const body = document.getElementById("body").value.trim();
+                const recipient = document.getElementById("recipient").value.trim();
+                if (!recipient || !body) { showToast("Recipient and message are required.", "error"); return; }
+                setLoading(btn, true);
+                try {
+                    const response = await fetch(`${API_BASE}/send`, {
+                        method: "POST", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ sender_id: {{ current_id }}, recipient, subject: document.getElementById("subject").value.trim(), body }),
+                    });
+                    if (!response.ok) throw new Error('Server error sending email');
+                    showToast("Email sent successfully!", "success");
+                    setTimeout(() => location.reload(), 800);
+                } catch (error) { showToast(error.message, "error"); }
+                finally { setLoading(btn, false); }
+            });
+
+            document.getElementById("analyze-btn").addEventListener("click", async () => {
+                const btn = document.getElementById("analyze-btn");
+                const body = document.getElementById("body").value.trim();
+                if (!body) { showToast("Please write a message to analyze.", "error"); return; }
+                setLoading(btn, true);
+                try {
+                    const [toneRes, spamRes] = await Promise.all([
+                        fetch(`${API_BASE}/llama_generate_tone`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: body }) }),
+                        fetch(`${API_BASE}/llama_generate_spam`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: body }) })
+                    ]);
+                    const toneData = await toneRes.json();
+                    const spamData = await spamRes.json();
+                    const tone = toneData.tone || "neutral";
+                    const spam = spamData.spam === true;
+                    document.getElementById("llama-result").style.display = "block";
+                    const toneBadge = document.getElementById("llama-tone");
+                    toneBadge.textContent = tone.charAt(0).toUpperCase() + tone.slice(1);
+                    toneBadge.className = `tone-badge tone-${tone.toLowerCase()}`;
+                    const spamBadge = document.getElementById("llama-spam");
+                    spamBadge.textContent = spam ? "Yes" : "No";
+                    spamBadge.className = `badge ${spam ? "bg-danger" : "bg-success"}`;
+                } catch (err) { showToast("Error during AI analysis.", "error"); }
+                finally { setLoading(btn, false); }
+            });
+
+            const rewriteBtn = document.getElementById('rewrite-btn');
+            const useRewrittenBtn = document.getElementById('use-rewritten-text-btn');
+            rewriteBtn.addEventListener('click', async () => {
+                const originalText = document.getElementById('body').value.trim();
+                const selectedTone = document.getElementById('rewrite-tone-select').value;
+                if (!originalText) { showToast("Please write a message to rewrite.", "error"); return; }
+                setLoading(rewriteBtn, true);
+                try {
+                    const response = await fetch(`${API_BASE}/rewrite_tone`, {
+                        method: 'POST', headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ text: originalText, tone: selectedTone })
+                    });
+                    if (!response.ok) throw new Error('Failed to get rewritten text.');
+                    const result = await response.json();
+                    document.getElementById('rewritten-text-output').value = result.rewritten_text;
+                    document.getElementById('rewrite-result-container').style.display = 'block';
+                } catch (error) { showToast(error.message, "error"); }
+                finally { setLoading(rewriteBtn, false); }
+            });
+
+            useRewrittenBtn.addEventListener('click', () => {
+                document.getElementById('body').value = document.getElementById('rewritten-text-output').value;
+                updatePreview(); 
+                showToast("Message updated!", "success");
+            });
+        });
+    </script>
+</body>
+</html>
